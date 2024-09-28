@@ -1,6 +1,6 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { AdminContext } from '../state/adminContext';
-import { AuthContext } from '../state/authContext';
+import { useAuth } from '../state/authContext';
 import { generateAppointmentReport } from '../services/adminService';
 import {
   Typography,
@@ -24,6 +24,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(4),
   },
   chartContainer: {
+    width: '100%',
     height: 400,
   },
 }));
@@ -31,54 +32,64 @@ const useStyles = makeStyles((theme) => ({
 const Reports = () => {
   const classes = useStyles();
   const { reports, setReports } = useContext(AdminContext);
-  const { getToken } = useContext(AuthContext);
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchReport = async () => {
+    const fetchReports = async () => {
       try {
         const token = getToken();
         const response = await generateAppointmentReport(token);
-        const formattedData = response.data.map((item) => ({
-          date: item._id,
-          count: item.count,
-        }));
-        setReports(formattedData);
+        setReports(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error generating report:', error);
+        console.error('Error fetching reports:', error);
         setLoading(false);
       }
     };
-    fetchReport();
-  }, [getToken, setReports]);
+
+    fetchReports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <div className={classes.container}>
+        <CircularProgress />
+      </div>
+    );
   }
 
   return (
-    <Paper className={classes.container}>
-      <Typography variant="h5" gutterBottom>
+    <div className={classes.container}>
+      <Typography variant="h4" gutterBottom>
         Appointment Reports
       </Typography>
-      {reports.length > 0 ? (
-        <div className={classes.chartContainer}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={reports}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="count" name="Appointments" stroke="#3f51b5" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {reports && reports.length > 0 ? (
+        <Paper>
+          <div className={classes.chartContainer}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={reports}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="appointmentCount"
+                  name="Appointments"
+                  stroke="#3f51b5"
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Paper>
       ) : (
         <Typography>No report data available.</Typography>
       )}
-    </Paper>
+    </div>
   );
 };
 
