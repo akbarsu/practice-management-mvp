@@ -1,52 +1,45 @@
-// Insurance upload form with OCR functionality
-import React, { useState, useContext } from 'react';
-import { uploadInsurance } from '../services/userService';
-import { AuthContext } from '../state/authContext';
+import React, { useState } from 'react';
+import { Button, Typography, makeStyles } from '@material-ui/core';
+import { uploadInsurance } from '../services/insuranceService';
+import { useAuth } from '../state/authContext';
+
+const useStyles = makeStyles((theme) => ({
+  // Define styles here
+}));
 
 const UploadInsurance = () => {
-  const { authState } = useContext(AuthContext);
-  const [file, setFile] = useState(null);
-  const [insuranceData, setInsuranceData] = useState(null);
+  const classes = useStyles();
+  const { getToken } = useAuth();
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    setSelectedFile(e.target.files[0]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!file) {
-      alert('Please select a file to upload');
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      // Show error message
       return;
     }
-
     const formData = new FormData();
-    formData.append('file', file);
-
+    formData.append('insuranceFile', selectedFile);
     try {
-      const response = await uploadInsurance(formData, authState.token);
-      setInsuranceData(response.data.insurance);
-      alert('Insurance uploaded successfully');
+      const token = getToken();
+      const response = await uploadInsurance(formData, token);
+      // Handle success, e.g., update state or show success message
     } catch (error) {
-      console.error('Upload Insurance Error:', error);
-      // Handle error
+      console.error('Error uploading insurance document:', error);
+      // Handle error, e.g., show error message
     }
   };
 
   return (
     <div>
-      <h2>Upload Insurance</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
-        <button type="submit">Upload</button>
-      </form>
-      {insuranceData && (
-        <div>
-          <h3>Extracted Insurance Data:</h3>
-          <p>Provider Name: {insuranceData.providerName}</p>
-          <p>Policy Number: {insuranceData.policyNumber}</p>
-          <p>Verification Status: {insuranceData.verificationStatus}</p>
-        </div>
-      )}
+      <Typography variant="h5">Upload Insurance Document</Typography>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+      <Button variant="contained" color="primary" onClick={handleUpload}>
+        Upload
+      </Button>
     </div>
   );
 };
