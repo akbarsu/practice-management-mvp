@@ -11,6 +11,8 @@ import AppointmentList from './components/AppointmentList';
 import RequestAppointment from './components/RequestAppointment';
 import InvoiceList from './components/InvoiceList';
 import PayInvoice from './components/PayInvoice';
+import AdminDashboard from './pages/AdminDashboard';
+import Unauthorized from './components/Unauthorized';
 
 function App() {
   return (
@@ -21,6 +23,9 @@ function App() {
         <Link to="/request-appointment">Request Appointment</Link> |{' '}
         <Link to="/invoices">Invoices</Link> |{' '}
         <Link to="/profile">Profile</Link>
+        {authState.isAuthenticated && authState.user.role === 'admin' && (
+          <> | <Link to="/admin">Admin Panel</Link></>
+        )}
       </nav>
       <Switch>
         <Route exact path="/" component={HomePage} />
@@ -33,6 +38,8 @@ function App() {
         <PrivateRoute path="/request-appointment" component={RequestAppointment} />
         <PrivateRoute exact path="/invoices" component={InvoiceList} />
         <PrivateRoute path="/invoices/:invoiceId/pay" component={PayInvoice} />
+        <PrivateRoute path="/admin" roles={['admin']} component={AdminDashboard} />
+        <Route path="/unauthorized" component={Unauthorized} />
         {/* ... other routes ... */}
       </Switch>
     </div>

@@ -5,6 +5,7 @@ import { AuthProvider } from './state/authContext';
 import { UserProvider } from './state/userContext';
 import { AppointmentProvider } from './state/appointmentContext';
 import { InvoiceProvider } from './state/invoiceContext';
+import { AdminProvider } from './state/adminContext';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 
@@ -26,11 +27,13 @@ ReactDOM.render(
       <UserProvider>
         <AppointmentProvider>
           <InvoiceProvider>
-            <Router>
-              <ThemeProvider theme={theme}>
-                <App />
-              </ThemeProvider>
-            </Router>
+            <AdminProvider>
+              <Router>
+                <ThemeProvider theme={theme}>
+                  <App />
+                </ThemeProvider>
+              </Router>
+            </AdminProvider>
           </InvoiceProvider>
         </AppointmentProvider>
       </UserProvider>
