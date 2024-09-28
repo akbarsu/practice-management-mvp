@@ -1,103 +1,99 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../state/authContext';
-import { UserContext } from '../state/userContext';
+import React, { useState, useEffect } from 'react';
+import { TextField, Button, Typography, Paper, makeStyles } from '@material-ui/core';
+import { useAuth } from '../state/authContext';
 import { getUserProfile, updateUserProfile } from '../services/userService';
-import { TextField, Button, Typography } from '@material-ui/core';
+
+const useStyles = makeStyles((theme) => ({
+  container: {
+    maxWidth: 600,
+    margin: 'auto',
+    padding: theme.spacing(4),
+    marginTop: theme.spacing(4),
+  },
+  field: {
+    marginBottom: theme.spacing(2),
+  },
+}));
 
 const Profile = () => {
-  const { authState } = useContext(AuthContext);
-  const { userProfile, setUserProfile } = useContext(UserContext);
-  const [formData, setFormData] = useState({
+  const classes = useStyles();
+  const { getToken } = useAuth();
+  const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    address: '',
-    phoneNumber: '',
+    // ... other profile fields ...
   });
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchProfile = async () => {
       try {
-        const response = await getUserProfile(authState.token);
-        setUserProfile(response.data);
-        setFormData(response.data);
+        const token = getToken();
+        const response = await getUserProfile(token);
+        setProfile(response.data);
       } catch (error) {
-        console.error('Get Profile Error:', error);
-        // Handle error (e.g., show notification)
+        console.error('Error fetching profile:', error);
       }
     };
-
-    fetchUserProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchProfile();
+  }, [getToken]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await updateUserProfile(formData, authState.token);
-      setUserProfile(response.data);
-      alert('Profile updated successfully');
+      const token = getToken();
+      await updateUserProfile(profile, token);
+      // Show success message or Snackbar
     } catch (error) {
-      console.error('Update Profile Error:', error);
-      // Handle error
+      console.error('Error updating profile:', error);
+      // Show error message or Snackbar
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Typography variant="h4">User Profile</Typography>
-      <TextField
-        label="First Name"
-        name="firstName"
-        value={formData.firstName || ''}
-        onChange={handleChange}
-        required
-        fullWidth
-        margin="normal"
-      />
-      <TextField
-        label="Last Name"
-        name="lastName"
-        value={formData.lastName || ''}
-        onChange={handleChange}
-        required
-        fullWidth
-        margin="normal"
-      />
-      <TextField
-        label="Email"
-        name="email"
-        value={formData.email || ''}
-        onChange={handleChange}
-        required
-        fullWidth
-        margin="normal"
-        disabled
-      />
-      <TextField
-        label="Address"
-        name="address"
-        value={formData.address || ''}
-        onChange={handleChange}
-        fullWidth
-        margin="normal"
-      />
-      <TextField
-        label="Phone Number"
-        name="phoneNumber"
-        value={formData.phoneNumber || ''}
-        onChange={handleChange}
-        fullWidth
-        margin="normal"
-      />
-      <Button type="submit" variant="contained" color="primary">
-        Update Profile
-      </Button>
-    </form>
+    <Paper className={classes.container}>
+      <Typography variant="h5" gutterBottom>
+        Edit Profile
+      </Typography>
+      <form onSubmit={handleSubmit}>
+        <TextField
+          label="First Name"
+          name="firstName"
+          fullWidth
+          required
+          className={classes.field}
+          value={profile.firstName}
+          onChange={handleChange}
+        />
+        <TextField
+          label="Last Name"
+          name="lastName"
+          fullWidth
+          required
+          className={classes.field}
+          value={profile.lastName}
+          onChange={handleChange}
+        />
+        <TextField
+          label="Email"
+          name="email"
+          fullWidth
+          required
+          className={classes.field}
+          value={profile.email}
+          onChange={handleChange}
+          disabled
+        />
+        {/* Add other profile fields as needed */}
+        <Button type="submit" color="primary" variant="contained">
+          Save Changes
+        </Button>
+      </form>
+    </Paper>
   );
 };
 

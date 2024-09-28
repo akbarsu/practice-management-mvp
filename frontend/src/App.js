@@ -1,5 +1,6 @@
 import React from 'react';
-import { Route, Switch, Link } from 'react-router-dom';
+import { Switch, Route } from 'react-router-dom';
+import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -16,17 +17,8 @@ import Unauthorized from './components/Unauthorized';
 
 function App() {
   return (
-    <div>
-      <nav>
-        <Link to="/">Home</Link> |{' '}
-        <Link to="/appointments">Appointments</Link> |{' '}
-        <Link to="/request-appointment">Request Appointment</Link> |{' '}
-        <Link to="/invoices">Invoices</Link> |{' '}
-        <Link to="/profile">Profile</Link>
-        {authState.isAuthenticated && authState.user.role === 'admin' && (
-          <> | <Link to="/admin">Admin Panel</Link></>
-        )}
-      </nav>
+    <>
+      <Navigation />
       <Switch>
         <Route exact path="/" component={HomePage} />
         <Route path="/login" component={Login} />
@@ -42,7 +34,7 @@ function App() {
         <Route path="/unauthorized" component={Unauthorized} />
         {/* ... other routes ... */}
       </Switch>
-    </div>
+    </>
   );
 }
 

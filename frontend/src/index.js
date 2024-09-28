@@ -19,6 +19,9 @@ const theme = createMuiTheme({
       main: '#dc004e', // Customize secondary color
     },
   },
+  typography: {
+    // Customize typography if needed
+  },
 });
 
 ReactDOM.render(
