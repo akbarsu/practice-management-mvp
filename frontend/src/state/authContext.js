@@ -1,5 +1,7 @@
 // Context for managing authentication state
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { getUserProfile } from '../services/userService';
+import { useUser } from './userContext';
 
 export const AuthContext = createContext();
 
@@ -25,13 +27,23 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = (user, token) => {
+  const { updateUserProfile } = useUser();
+
+  const login = async (user, token) => {
     setAuthState({
       isAuthenticated: true,
       user,
       token,
     });
     localStorage.setItem('token', token);
+
+    try {
+      // Fetch user profile
+      const profileResponse = await getUserProfile(token);
+      updateUserProfile(profileResponse.data);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
   };
 
   const logout = () => {
