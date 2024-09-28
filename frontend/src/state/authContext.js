@@ -1,5 +1,5 @@
 // Context for managing authentication state
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 export const AuthContext = createContext();
 
@@ -11,6 +11,19 @@ export const AuthProvider = ({ children }) => {
     user: null,
     token: null,
   });
+
+  // Load token and user from localStorage on initial render
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Optionally, decode token to get user info or fetch user profile
+      setAuthState({
+        isAuthenticated: true,
+        user: null, // Fetch or decode user info
+        token,
+      });
+    }
+  }, []);
 
   const login = (user, token) => {
     setAuthState({

@@ -8,6 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const cors = require('cors');
 
 // Connect to database
 connectDB();
@@ -15,6 +16,14 @@ connectDB();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configure CORS
+app.use(
+  cors({
+    origin: 'http://localhost:3000', // Update with your frontend URL
+    credentials: true,
+  })
+);
 
 // Routes
 app.use('/api/auth', authRoutes);
