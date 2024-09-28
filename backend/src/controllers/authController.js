@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 // Register a new user
 const registerUser = async (req, res) => {
-	const { firstName, lastName, email, password } = req.body;
+	const { firstName, lastName, email, password, role } = req.body;
 
 	try {
 		// Check if user already exists
@@ -23,7 +23,7 @@ const registerUser = async (req, res) => {
 			lastName,
 			email,
 			passwordHash,
-			roles: ['patient'], // default role
+			role, // Include role
 		});
 
 		await user.save();
