@@ -175,7 +175,7 @@ flowchart TB
         Routes --> Controllers
         Middleware --> Config
     end
-    Backend --> |Database Connection| MongoD(MongoDB)]
+    Backend --> |Database Connection| MongoDB[(MongoDB)]
     Backend --> |Integrations| ThirdPartyAPIs[Third-Party Services]
 ```
 
