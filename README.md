@@ -1,10 +1,47 @@
 # Practice Management MVP
 
-A web-based application aimed at streamlining administrative tasks for healthcare practices, specifically dental clinics.
+A comprehensive web-based application designed to streamline administrative tasks for healthcare practices, specifically dental clinics. This Minimum Viable Product (MVP) focuses on enhancing efficiency by automating processes such as appointment scheduling, invoice management, insurance verification, and more.
+
+---
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Project Structure](#project-structure)
+3. [System Architecture](#system-architecture)
+   - [High-Level Overview](#high-level-overview)
+   - [Backend Architecture](#backend-architecture)
+   - [Frontend Architecture](#frontend-architecture)
+4. [Technology Stack](#technology-stack)
+   - [Frontend Technologies](#frontend-technologies)
+   - [Backend Technologies](#backend-technologies)
+   - [Third-Party Integrations](#third-party-integrations)
+5. [Database Design](#database-design)
+   - [Data Models](#data-models)
+   - [Entity-Relationship Diagram](#entity-relationship-diagram)
+6. [API Endpoints](#api-endpoints)
+7. [Module Breakdown](#module-breakdown)
+   - [Authentication and Authorization](#authentication-and-authorization)
+   - [User Profile Management](#user-profile-management)
+   - [Appointment Management](#appointment-management)
+   - [Invoice and Payment Processing](#invoice-and-payment-processing)
+   - [Admin Panel](#admin-panel)
+8. [Workflows](#workflows)
+   - [User Registration and Authentication Flow](#user-registration-and-authentication-flow)
+   - [Appointment Scheduling Flow](#appointment-scheduling-flow)
+   - [Insurance Upload and OCR Flow](#insurance-upload-and-ocr-flow)
+9. [Security Considerations](#security-considerations)
+10. [Future Enhancements](#future-enhancements)
+
+---
+
+## Introduction
+
+The **Practice Management MVP** is designed to simplify and automate routine administrative tasks in dental clinics. By integrating appointment scheduling, invoice generation, insurance verification, and patient management into a unified platform, the application aims to improve operational efficiency and enhance patient experience.
+
+---
 
 ## Project Structure
-
-GitHub repository architecture for the Practice Management MVP:
 
 ```bash
 practice-management-mvp/
@@ -29,13 +66,13 @@ practice-management-mvp/
 │   │   │   ├── userRoutes.js              # Routes related to user operations (profile, insurance)
 │   │   │   ├── appointmentRoutes.js       # Routes for appointment-related operations
 │   │   │   ├── invoiceRoutes.js           # Routes for invoice and payment-related operations
+│   │   ├── middleware/
+│   │   │   ├── authMiddleware.js          # JWT authentication middleware
+│   │   │   ├── errorMiddleware.js         # Centralized error handling middleware
 │   │   ├── config/
 │   │   │   ├── dbConfig.js                # Database connection configuration (MongoDB)
 │   │   │   ├── cloudConfig.js             # Configuration for Google Cloud Vision API
 │   │   │   ├── stripeConfig.js            # Configuration for Stripe API
-│   │   ├── middleware/
-│   │   │   ├── authMiddleware.js          # JWT authentication middleware
-│   │   │   ├── errorMiddleware.js         # Centralized error handling middleware
 │   │   ├── app.js                         # Initializes Express server and loads middleware
 │   │   ├── server.js                      # Starts the server and listens for requests
 │   ├── test/
@@ -68,6 +105,9 @@ practice-management-mvp/
 │   │   │   ├── authContext.js             # Context for managing authentication state
 │   │   │   ├── appointmentContext.js      # Context for managing appointment data
 │   │   │   ├── invoiceContext.js          # Context for managing invoice data
+│   │   │   ├── userContext.js             # Context for managing user profile data
+│   │   │   ├── insuranceContext.js        # Context for managing insurance data
+│   │   ├── App.js                         # Main React component
 │   ├── public/
 │   │   ├── index.html                     # Main HTML file for React app
 │   ├── package.json                       # Dependencies and scripts for frontend
@@ -84,152 +124,395 @@ practice-management-mvp/
 
 ### Breakdown of Files and Directories
 
-- **`backend/`**: Contains all server-side logic, including routes, controllers, models, and services. It manages API endpoints, database interactions, and third-party integrations (OCR, payment, insurance verification).
-  
-  - **`controllers/`**: Handle requests and responses for different functionalities (e.g., user management, appointments, invoices).
-  - **`models/`**: Define MongoDB schemas for entities like users, appointments, and invoices.
-  - **`services/`**: Implement third-party integrations (e.g., Google Cloud Vision, Stripe).
-  - **`routes/`**: Define HTTP routes and map them to the appropriate controller methods.
-  - **`config/`**: Store configuration settings for services like Stripe and Google Cloud Vision.
-  - **`middleware/`**: Implement middleware for request validation, authentication, and error handling.
-  - **`test/`**: Contains unit and integration tests for both controllers and services.
-  
-- **`frontend/`**: Contains the client-side React application for both patients and admins. It manages UI components, state, and API calls.
-  
-  - **`components/`**: Reusable React components like forms, tables, and dashboards.
-  - **`pages/`**: Page components for different routes (e.g., homepage, login, admin dashboard).
-  - **`services/`**: Handles API communication between frontend and backend.
-  - **`state/`**: Context API or Redux store management for frontend state (e.g., authentication, appointments).
-  
-- **`docs/`**: Documentation for the project, including API specs and UI mockups for reference.
+- **`backend/`**: Contains all server-side logic, including routes, controllers, models, and services. It manages API endpoints, database interactions, and third-party integrations (OCR, payment processing, insurance verification).
 
-- **`docker-compose.yml`**: Defines Docker services for local development and testing environments.
+  - **`controllers/`**: Handle HTTP requests and orchestrate operations for user management, appointments, invoices, and more.
+  - **`models/`**: Define MongoDB schemas for entities like users, appointments, invoices, and insurance.
+  - **`services/`**: Implement core business logic and integrate with third-party APIs (e.g., Google Cloud Vision, Stripe).
+  - **`routes/`**: Define RESTful API endpoints and map them to controller methods.
+  - **`middleware/`**: Implement middleware for authentication, error handling, and request validation.
+  - **`config/`**: Store configuration settings and environment variables for services like MongoDB, Stripe, and Google Cloud APIs.
+  - **`test/`**: Contains unit and integration tests to ensure code reliability and correctness.
 
-This architecture lays the foundation for a modular, scalable application, with clear separation of concerns between backend and frontend components. Each major feature is isolated in its own directory, and the architecture is designed for easy extension and testing.
+- **`frontend/`**: Contains the client-side React application for both patients and administrators. It manages UI components, state, and API communication.
 
-## 2. Functional Requirements
+  - **`components/`**: Reusable React components like forms, tables, dashboards, and modals.
+  - **`pages/`**: Page components representing different routes (e.g., homepage, login, admin dashboard).
+  - **`services/`**: Handle API communication between the frontend and backend.
+  - **`state/`**: Manage application state using Context API for authentication, user profiles, appointments, invoices, etc.
+  - **`App.js`**: Main application component that sets up routing and context providers.
 
-### 2.1 Patient Portal (Consumer-Facing Interface)
-- **User Registration and Authentication:**
-  - Email/password-based registration and social media login (optional).
-  - Role-based access control (patient, admin).
-  
-- **Profile Management:**
-  - Update personal information (name, address, insurance).
-  - Upload and manage insurance information.
+- **`docs/`**: Contains documentation for the project, including API specifications and UI mockups for reference.
 
-- **Insurance Card Upload with OCR:**
-  - Upload insurance card images (JPG, PNG, PDF).
-  - Use OCR to auto-fill insurance forms.
-
-- **Appointment Management:**
-  - View, request, or cancel appointments.
-  - Check-in and check-out functionality.
-
-- **Invoice and Payment Processing:**
-  - View outstanding invoices and transaction history.
-  - Integrated secure payment processing (via Stripe).
-  - Download invoices and receipts.
-
-### 2.2 Admin Panel (Server-Side Interface)
-- **Dashboard:**
-  - Overview of appointments, payments, and key statistics.
-  
-- **Patient Management:**
-  - Access and update patient profiles.
-  - Verify insurance cards and information.
-
-- **Appointment Scheduling:**
-  - Manage patient appointments and reminders (email/SMS).
-  
-- **Invoice Management:**
-  - Generate, edit, and track invoices.
-  - Monitor outstanding payments and payment status.
-
-- **Reporting and Analytics:**
-  - Generate reports on patient visits, revenue, etc.
-  - Data export in CSV or PDF.
-
-### 2.3 Integration Features
-- **Existing Practice Software Integration:**
-  - APIs for syncing data with existing practice management software.
-  
-- **Payment Gateway Integration:**
-  - Secure payment processing via Stripe API.
-  
-- **OCR and Insurance Verification:**
-  - OCR via Google Cloud Vision API for insurance card data extraction.
-  - Integrate insurance verification APIs or enable manual review.
+- **`docker-compose.yml`**: Defines Docker services for setting up a consistent development and testing environment.
 
 ---
 
-## 3. Non-Functional Requirements
-- **Security and Compliance:**
-  - SSL encryption and HIPAA compliance for patient data security.
-  
-- **Performance:**
-  - Page load times under 2 seconds.
-  - OCR processing within 5 seconds.
-  
-- **Scalability:**
-  - Modular architecture to handle growing users and new features.
+## System Architecture
 
-- **Usability:**
-  - Intuitive, mobile-friendly design with WCAG 2.1 accessibility compliance.
+### High-Level Overview
+
+The application follows a client-server architecture with a clear separation between the frontend and backend. The backend exposes RESTful APIs consumed by the frontend. The system is designed for scalability and ease of maintenance.
+
+```mermaid
+flowchart LR
+    ClientBrowser --> |HTTP Requests| BackendServer
+    BackendServer --> |Database Queries| MongoDB[(MongoDB)]
+    BackendServer --> |API Calls| ThirdPartyAPIs[Third-Party Services]
+    ThirdPartyAPIs --> BackendServer
+```
+
+### Backend Architecture
+
+The backend is built with Node.js and Express.js, following a modular structure.
+
+```mermaid
+flowchart TB
+    subgraph Backend[Backend (Node.js/Express.js)]
+        Controllers --> Models
+        Controllers --> Services
+        Controllers -->|Use| Middleware
+        Routes --> Controllers
+        Middleware --> Config
+    end
+    Backend --> |Database Connection| MongoDB[(MongoDB)]
+    Backend --> |Integrations| ThirdPartyAPIs[Third-Party Services]
+```
+
+- **Controllers**: Process incoming requests, call appropriate services, and return responses.
+- **Models**: Define data schemas and interact with the MongoDB database via Mongoose.
+- **Services**: Contain business logic and handle operations like payment processing and OCR.
+- **Middleware**: Include authentication middleware (JWT), error handling, and input validation.
+- **Routes**: Define API endpoints and map them to controller functions.
+- **Config**: Store configuration and environment variables for secure and flexible setup.
+
+### Frontend Architecture
+
+The frontend is developed using React.js, utilizing functional components and hooks.
+
+```mermaid
+flowchart TB
+    subgraph Frontend[Frontend (React.js)]
+        Components --> Pages
+        Pages --> AppComponent[App.js]
+        AppComponent --> Routing
+        AppComponent --> StateManagement
+        Services --> |API Calls| BackendAPIs[(Backend APIs)]
+        StateManagement --> Components
+        StateManagement --> Pages
+    end
+```
+
+- **Components**: Reusable UI elements used across different pages.
+- **Pages**: Specific views representing different routes.
+- **Services**: Handle communication with the backend APIs using Axios.
+- **State Management**: Use Context API for managing global state (e.g., authenticated user).
+- **Routing**: Implemented using React Router for client-side navigation.
 
 ---
 
-## 4. System Architecture
+## Technology Stack
 
-- **Client-Server Architecture**: Separation of frontend (React) and backend (Node.js).
-- **Three-Tier Structure**: Presentation (UI), Application (business logic), Data Layer (database).
-- **API-First Approach**: All features exposed via RESTful APIs, future-proofing for mobile app extensions.
-- **Monolithic MVP**: Future transition to microservices as the system scales.
+### Frontend Technologies
 
----
-
-## 5. Technology Stack
-
-### 5.1 Frontend
+- **Language**: JavaScript (ES6+)
 - **Framework**: React.js
-- **State Management**: Redux or Context API
-- **UI Libraries**: Material-UI for reusable components
-- **Routing**: React Router
-- **Testing**: Jest, React Testing Library
+- **State Management**: Context API
+- **UI Libraries**: Material-UI for consistent and responsive UI components
+- **Routing**: React Router for client-side routing
+- **Form Handling**: Formik and Yup for form management and validation
+- **HTTP Client**: Axios for API calls
+- **Build Tool**: Create React App (CRA)
+- **Testing**: Jest and React Testing Library
 
-### 5.2 Backend
-- **Runtime Environment**: Node.js
+### Backend Technologies
+
+- **Language**: JavaScript (ES6+)
+- **Runtime**: Node.js
 - **Framework**: Express.js
-- **Database**: MongoDB (via Mongoose ODM)
-- **Authentication**: Passport.js (JWT strategy)
-- **API Documentation**: Swagger
-- **Testing**: Mocha, Chai, Sinon
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JSON Web Tokens (JWT) with Passport.js
+- **API Documentation**: Swagger or OpenAPI Specification
+- **Environment Management**: dotenv for environment variables
+- **Testing**: Mocha, Chai, and Sinon
+- **Logging**: Morgan for HTTP request logging
 
-### 5.3 OCR and Payment Processing
-- **OCR**: Google Cloud Vision API
-- **Payment Gateway**: Stripe API
+### Third-Party Integrations
 
-### 5.4 Deployment
-- **Cloud Provider**: AWS (Elastic Beanstalk, S3, DocumentDB)
-- **CI/CD**: GitHub Actions
-- **Monitoring**: AWS CloudWatch
-
----
-
-## 6. Database Design
-
-### 6.1 User Model
-- `userId`, `firstName`, `lastName`, `email`, `passwordHash`, `roles`
-
-### 6.2 Insurance Model
-- `insuranceId`, `userId`, `providerName`, `policyNumber`, `scannedDocuments`, `verificationStatus`
-
-### 6.3 Appointment Model
-- `appointmentId`, `userId`, `appointmentDate`, `status`
-
-### 6.4 Invoice Model
-- `invoiceId`, `userId`, `amountDue`, `amountPaid`, `dueDate`
+- **OCR Service**: Google Cloud Vision API for extracting text from insurance documents
+- **Payment Gateway**: Stripe API for handling secure payments
+- **Cloud Services**: AWS for potential deployment, storage, and scalability
+- **Email/SMS Notifications**: (Optional) Integration with services like Twilio or SendGrid
 
 ---
 
-This document serves as the guiding blueprint for building out the MVP in a structured, scalable, and efficient manner.
+## Database Design
+
+### Data Models
+
+#### User Model (`userModel.js`)
+
+```javascript
+{
+  _id: ObjectId,
+  firstName: String,
+  lastName: String,
+  email: String,
+  passwordHash: String,
+  roles: [String],
+  address: String,
+  phoneNumber: String,
+  insurance: ObjectId, // Reference to Insurance Model
+}
+```
+
+#### Insurance Model (`insuranceModel.js`)
+
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId, // Reference to User Model
+  providerName: String,
+  policyNumber: String,
+  scannedDocuments: [String], // URLs or file paths
+  verificationStatus: String, // e.g., 'pending', 'verified'
+}
+```
+
+#### Appointment Model (`appointmentModel.js`)
+
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId, // Reference to User Model
+  appointmentDate: Date,
+  status: String, // e.g., 'requested', 'confirmed', 'completed'
+  notes: String,
+}
+```
+
+#### Invoice Model (`invoiceModel.js`)
+
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId, // Reference to User Model
+  appointmentId: ObjectId, // Reference to Appointment Model
+  amountDue: Number,
+  amountPaid: Number,
+  dueDate: Date,
+  status: String, // e.g., 'unpaid', 'paid', 'overdue'
+}
+```
+
+### Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+    USER ||--o{ APPOINTMENT : has
+    USER ||--o{ INVOICE : receives
+    USER ||--|| INSURANCE : owns
+    APPOINTMENT ||--|| INVOICE : generates
+
+    USER {
+        ObjectId _id
+        string firstName
+        string lastName
+        string email
+        string passwordHash
+        string[] roles
+        string address
+        string phoneNumber
+        ObjectId insuranceId
+    }
+    INSURANCE {
+        ObjectId _id
+        ObjectId userId
+        string providerName
+        string policyNumber
+        string[] scannedDocuments
+        string verificationStatus
+    }
+    APPOINTMENT {
+        ObjectId _id
+        ObjectId userId
+        datetime appointmentDate
+        string status
+        string notes
+    }
+    INVOICE {
+        ObjectId _id
+        ObjectId userId
+        ObjectId appointmentId
+        double amountDue
+        double amountPaid
+        datetime dueDate
+        string status
+    }
+```
+
+---
+
+## API Endpoints
+
+### Authentication Routes (`/api/auth`)
+
+- **`POST /register`**: Register a new user.
+- **`POST /login`**: Authenticate user and return a JWT token.
+
+### User Routes (`/api/user`)
+
+- **`GET /profile`**: Retrieve user profile information.
+- **`PUT /profile`**: Update user profile.
+- **`POST /insurance`**: Upload insurance documents.
+- **`GET /insurance`**: Get insurance details.
+
+### Appointment Routes (`/api/appointments`)
+
+- **`POST /`**: Request a new appointment.
+- **`GET /`**: Get user's appointments.
+- **`PUT /:id/cancel`**: Cancel an appointment.
+- **`PUT /:id/check-in`**: Check-in to an appointment.
+- **`PUT /:id/check-out`**: Check-out of an appointment.
+
+### Invoice Routes (`/api/invoices`)
+
+- **`GET /`**: Retrieve user's invoices.
+- **`POST /pay`**: Pay an invoice.
+
+### Admin Routes (`/api/admin`)
+
+- **`GET /users`**: Retrieve all users (admin only).
+- **`PUT /users/:id/role`**: Update user role.
+- **`GET /appointments`**: Retrieve all appointments.
+- **`GET /invoices`**: Retrieve all invoices.
+- **`GET /reports/appointments`**: Generate appointment reports.
+
+---
+
+## Module Breakdown
+
+### Authentication and Authorization
+
+Implementing secure user authentication and authorization mechanisms using JWTs and Passport.js.
+
+- **JWT Authentication**: Secure stateless authentication mechanism for API protection.
+- **Role-Based Access Control (RBAC)**: Users are assigned roles (`patient`, `admin`) that grant specific permissions.
+
+### User Profile Management
+
+Allows users to manage their personal information and insurance details.
+
+- **Profile Updates**: Users can update their address, phone number, and other personal details.
+- **Insurance Management**: Users can upload insurance cards, which are processed via OCR to extract information.
+
+### Appointment Management
+
+Enables users to schedule, view, and manage their appointments.
+
+- **Appointment Requests**: Users can request appointments for available slots.
+- **Status Tracking**: Appointment statuses include `requested`, `confirmed`, `canceled`, `completed`.
+- **Check-In/Check-Out**: Users can check in upon arrival and check out after their appointment.
+
+### Invoice and Payment Processing
+
+Handles billing and payment transactions securely and efficiently.
+
+- **Invoice Generation**: Automatically generate invoices upon appointment completion.
+- **Payment Processing**: Integrate with Stripe API to process payments securely.
+- **Payment Status**: Manage the status of invoices (`unpaid`, `paid`, `overdue`).
+
+### Admin Panel
+
+Provides administrators with tools to manage the practice effectively.
+
+- **Dashboard**: Overview of key metrics like upcoming appointments, revenue, and patient statistics.
+- **Patient Management**: View and manage patient profiles and insurance verification.
+- **Appointment Management**: Oversee all appointments, confirm requests, and make adjustments.
+- **Invoice Management**: Monitor invoices, payments, and financial reports.
+- **Reporting**: Generate detailed reports on various aspects of the practice.
+
+---
+
+## Workflows
+
+### User Registration and Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    User->>Frontend: Fills registration form
+    Frontend->>Backend: POST /api/auth/register
+    Backend->>Database: Save user data
+    Database-->>Backend: Confirmation
+    Backend-->>Frontend: Registration success
+    User->>Frontend: Enters login credentials
+    Frontend->>Backend: POST /api/auth/login
+    Backend->>Database: Verify credentials
+    Database-->>Backend: User data
+    Backend-->>Frontend: JWT token
+    Frontend-->>User: Access granted
+```
+
+### Appointment Scheduling Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    User->>Frontend: Request new appointment
+    Frontend->>Backend: POST /api/appointments
+    Backend->>Database: Save appointment request
+    Database-->>Backend: Appointment details
+    Backend-->>Frontend: Confirmation
+    Frontend-->>User: Appointment requested
+    Admin->>Backend: Confirms appointment
+    Backend->>Database: Update status to 'confirmed'
+    Backend-->>Admin: Confirmation sent
+    Backend-->>Frontend: Notifies user
+```
+
+### Insurance Upload and OCR Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant OCRService
+    User->>Frontend: Uploads insurance card
+    Frontend->>Backend: POST /api/user/insurance
+    Backend->>OCRService: Process image
+    OCRService-->>Backend: Extracted data
+    Backend->>Database: Save insurance data
+    Backend-->>Frontend: Insurance details
+    Frontend-->>User: Displays extracted info
+```
+
+---
+
+## Security Considerations
+
+- **Data Encryption**: All data transmitted between the client and server is encrypted using SSL/TLS.
+- **Password Security**: Passwords are hashed using bcrypt before storage.
+- **Input Validation**: All incoming data is validated and sanitized to prevent SQL injection and XSS attacks.
+- **Access Control**: Middleware enforces authentication and authorization based on user roles.
+- **Compliance**: The application is designed with HIPAA compliance in mind to protect patient health information.
+
+---
+
+## Future Enhancements
+
+- **Mobile Applications**: Develop native iOS and Android apps for better accessibility.
+- **Microservices Architecture**: Refactor the backend into microservices for scalability.
+- **Telehealth Features**: Integrate video conferencing for remote consultations.
+- **AI Recommendations**: Use machine learning to provide insights and predictive analytics.
+- **Multilingual Support**: Offer the application in multiple languages for broader reach.
+- **Integration with EHR Systems**: Sync data with Electronic Health Records for comprehensive patient care.
+
+---
+
+*This README provides a detailed technical overview of the Practice Management MVP, outlining its architecture, components, and workflows to facilitate understanding and collaboration among developers and stakeholders.*
