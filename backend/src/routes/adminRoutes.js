@@ -1,57 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const { body } = require('express-validator');
 const adminController = require('../controllers/adminController');
 const authMiddleware = require('../middleware/authMiddleware');
-const adminMiddleware = require('../middleware/adminMiddleware');
 
-// Apply authentication and admin middleware to all admin routes
-router.use(authMiddleware);
-router.use(adminMiddleware);
+// Apply authentication middleware to all admin routes
+router.use(authMiddleware.authenticateToken);
+router.use(authMiddleware.authorizeRoles('admin'));
 
-// User Management
-router.get('/users', adminController.getAllUsers);
+// Dashboard Statistics
+router.get('/dashboard', adminController.getDashboardStats);
 
-router.put(
-  '/users/role',
-  [
-    body('userId').isMongoId().withMessage('Invalid user ID'),
-    body('role')
-      .isIn(['user', 'admin'])
-      .withMessage('Role must be either "user" or "admin"'),
-  ],
-  adminController.updateUserRole
-);
+// Patient Management
+router.get('/patients', adminController.getAllPatients);
+router.put('/patients/:userId', adminController.updatePatient);
+router.delete('/patients/:userId', adminController.deletePatient);
 
 // Appointment Management
 router.get('/appointments', adminController.getAllAppointments);
-
-router.put(
-  '/appointments/status',
-  [
-    body('appointmentId').isMongoId().withMessage('Invalid appointment ID'),
-    body('status')
-      .isIn(['scheduled', 'completed', 'cancelled'])
-      .withMessage('Invalid status value'),
-  ],
-  adminController.updateAppointmentStatus
-);
+router.put('/appointments/status', adminController.updateAppointmentStatus);
 
 // Invoice Management
 router.get('/invoices', adminController.getAllInvoices);
+router.put('/invoices/status', adminController.updateInvoiceStatus);
 
-router.put(
-  '/invoices/status',
-  [
-    body('invoiceId').isMongoId().withMessage('Invalid invoice ID'),
-    body('status')
-      .isIn(['paid', 'unpaid', 'overdue'])
-      .withMessage('Invalid status value'),
-  ],
-  adminController.updateInvoiceStatus
-);
-
-// Reports
-router.get('/reports/appointments', adminController.generateReport);
+// Reporting
+router.get('/reports/appointments', adminController.generateAppointmentReport);
 
 module.exports = router;
