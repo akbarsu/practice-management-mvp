@@ -545,8 +545,8 @@ To ensure interoperability and compliance with healthcare data exchange standard
 ```mermaid
 flowchart TD
     UserUploads[Extracted Insurance Data] -->|Standardized Format| VerificationService
-    VerificationService -->|Eligibility Request (270)| Clearinghouse
-    Clearinghouse -->|Eligibility Response (271)| VerificationService
+    VerificationService -->|Eligibility Request 270| Clearinghouse
+    Clearinghouse -->|Eligibility Response 271| VerificationService
     VerificationService -->|Parsed and Mapped Data| BackendDatabase[(MongoDB)]
     BackendDatabase -->|Updated Verification Status| BackendAPI
     BackendAPI -->|Notification| Frontend
