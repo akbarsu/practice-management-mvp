@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Typography, Paper, makeStyles } from '@material-ui/core';
 import { useAuth } from '../state/authContext';
 import { getUserProfile, updateUserProfile } from '../services/userService';
+import {
+  Typography,
+  TextField,
+  Button,
+  Container,
+  makeStyles,
+} from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
-  container: {
-    maxWidth: 600,
-    margin: 'auto',
-    padding: theme.spacing(4),
-    marginTop: theme.spacing(4),
-  },
-  field: {
-    marginBottom: theme.spacing(2),
-  },
+  // ...styles here...
 }));
 
 const Profile = () => {
   const classes = useStyles();
   const { getToken } = useAuth();
-  const [profile, setProfile] = useState({
+  const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    // ... other profile fields ...
+    // ...other profile fields...
   });
 
   useEffect(() => {
@@ -30,7 +28,7 @@ const Profile = () => {
       try {
         const token = getToken();
         const response = await getUserProfile(token);
-        setProfile(response.data);
+        setProfileData(response.data);
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -39,61 +37,38 @@ const Profile = () => {
   }, [getToken]);
 
   const handleChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+    setProfileData({
+      ...profileData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = getToken();
-      await updateUserProfile(profile, token);
-      // Show success message or Snackbar
+      await updateUserProfile(profileData, token);
+      alert('Profile updated successfully.');
     } catch (error) {
       console.error('Error updating profile:', error);
-      // Show error message or Snackbar
     }
   };
 
   return (
-    <Paper className={classes.container}>
-      <Typography variant="h5" gutterBottom>
-        Edit Profile
+    <Container className={classes.container}>
+      <Typography variant="h4" gutterBottom>
+        My Profile
       </Typography>
       <form onSubmit={handleSubmit}>
-        <TextField
-          label="First Name"
-          name="firstName"
-          fullWidth
-          required
-          className={classes.field}
-          value={profile.firstName}
-          onChange={handleChange}
-        />
-        <TextField
-          label="Last Name"
-          name="lastName"
-          fullWidth
-          required
-          className={classes.field}
-          value={profile.lastName}
-          onChange={handleChange}
-        />
-        <TextField
-          label="Email"
-          name="email"
-          fullWidth
-          required
-          className={classes.field}
-          value={profile.email}
-          onChange={handleChange}
-          disabled
-        />
-        {/* Add other profile fields as needed */}
-        <Button type="submit" color="primary" variant="contained">
-          Save Changes
+        {/* ...TextFields for profile data... */}
+        <Button
+          // ...props...
+          type="submit"
+        >
+          Update Profile
         </Button>
       </form>
-    </Paper>
+    </Container>
   );
 };
 

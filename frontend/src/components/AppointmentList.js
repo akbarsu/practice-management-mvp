@@ -1,24 +1,25 @@
 // Displays a list of upcoming and past appointments
 import React, { useEffect, useContext } from 'react';
-import {
-  getAppointments,
-  cancelAppointment,
-  checkInAppointment,
-  checkOutAppointment,
-} from '../services/appointmentService';
-import { AuthContext } from '../state/authContext';
 import { AppointmentContext } from '../state/appointmentContext';
+import { useAuth } from '../state/authContext';
+import { getAppointments, cancelAppointment } from '../services/appointmentService';
 import {
+  Typography,
   List,
   ListItem,
   ListItemText,
   Button,
-  Typography,
+  makeStyles,
 } from '@material-ui/core';
 
+const useStyles = makeStyles((theme) => ({
+  // ...styles here...
+}));
+
 const AppointmentList = () => {
-  const { appointments, setAppointments, updateAppointment } = useContext(AppointmentContext);
-  const { getToken } = useContext(AuthContext);
+  const classes = useStyles();
+  const { appointments, setAppointments } = useContext(AppointmentContext);
+  const { getToken } = useAuth();
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -36,73 +37,38 @@ const AppointmentList = () => {
   const handleCancel = async (appointmentId) => {
     try {
       const token = getToken();
-      const response = await cancelAppointment(appointmentId, token);
-      updateAppointment(response.data.appointment);
+      await cancelAppointment(appointmentId, token);
+      setAppointments((prev) => prev.filter((appt) => appt._id !== appointmentId));
     } catch (error) {
-      console.error('Error canceling appointment:', error);
-    }
-  };
-
-  const handleCheckIn = async (appointmentId) => {
-    try {
-      const token = getToken();
-      const response = await checkInAppointment(appointmentId, token);
-      updateAppointment(response.data.appointment);
-    } catch (error) {
-      console.error('Error checking in:', error);
-    }
-  };
-
-  const handleCheckOut = async (appointmentId) => {
-    try {
-      const token = getToken();
-      const response = await checkOutAppointment(appointmentId, token);
-      updateAppointment(response.data.appointment);
-    } catch (error) {
-      console.error('Error checking out:', error);
+      console.error('Error cancelling appointment:', error);
     }
   };
 
   return (
     <div>
-      <Typography variant="h4">My Appointments</Typography>
-      <List>
-        {appointments.map((appt) => (
-          <ListItem key={appt._id}>
-            <ListItemText
-              primary={new Date(appt.appointmentDate).toLocaleString()}
-              secondary={`Status: ${appt.status}`}
-            />
-            {appt.status === 'scheduled' && (
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => handleCancel(appt._id)}
-              >
-                Cancel
-              </Button>
-            )}
-            {appt.status === 'scheduled' && (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleCheckIn(appt._id)}
-              >
-                Check-In
-              </Button>
-            )}
-            {appt.status === 'in-progress' && (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleCheckOut(appt._id)}
-              >
-                Check-Out
-              </Button>
-            )}
-          </ListItem>
-        ))}
-      </List>
+      {appointments.length > 0 ? (
+        <List>
+          {appointments.map((appt) => (
+            <ListItem key={appt._id}>
+              <ListItemText
+                primary={`Appointment on ${new Date(appt.appointmentDate).toLocaleString()}`}
+                secondary={`Status: ${appt.status}`}
+              />
+              {appt.status === 'scheduled' && (
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => handleCancel(appt._id)}
+                >
+                  Cancel
+                </Button>
+              )}
+            </ListItem>
+          ))}
+        </List>
+      ) : (
+        <Typography>No appointments found.</Typography>
+      )}
     </div>
   );
 };

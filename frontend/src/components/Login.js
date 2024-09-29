@@ -1,67 +1,60 @@
-import React, { useState, useContext } from 'react';
-import { TextField, Button, Typography, Paper, makeStyles } from '@material-ui/core';
+import React, { useState } from 'react';
 import { useAuth } from '../state/authContext';
-import { loginUser } from '../services/authService';
+import { useHistory } from 'react-router-dom';
+import {
+  Avatar,
+  Button,
+  TextField,
+  Typography,
+  Container,
+  CssBaseline,
+  makeStyles,
+} from '@material-ui/core';
+import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
 const useStyles = makeStyles((theme) => ({
-  container: {
-    maxWidth: 400,
-    margin: 'auto',
-    padding: theme.spacing(4),
-    marginTop: theme.spacing(8),
-  },
-  field: {
-    marginBottom: theme.spacing(2),
-  },
+  // ...styles here...
 }));
 
-const Login = ({ history }) => {
+const Login = () => {
   const classes = useStyles();
   const { login } = useAuth();
+  const history = useHistory();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await loginUser({ email, password });
-      login(response.data.user, response.data.token);
-      history.push('/');
+      await login({ email, password });
+      history.push('/dashboard');
     } catch (error) {
-      console.error('Login Error:', error);
-      alert('Invalid credentials');
+      console.error('Login error:', error);
     }
   };
 
   return (
-    <Paper className={classes.container}>
-      <Typography variant="h5" gutterBottom>
-        Login
-      </Typography>
-      <form onSubmit={handleSubmit}>
+    <Container component="main" maxWidth="xs">
+      {/* ...UI elements... */}
+      <form className={classes.form} onSubmit={handleSubmit}>
         <TextField
-          label="Email"
-          type="email"
-          fullWidth
-          required
-          className={classes.field}
+          // ...props...
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <TextField
-          label="Password"
-          type="password"
-          fullWidth
-          required
-          className={classes.field}
+          // ...props...
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <Button type="submit" color="primary" variant="contained" fullWidth>
-          Login
+        <Button
+          // ...props...
+          type="submit"
+        >
+          Sign In
         </Button>
       </form>
-    </Paper>
+    </Container>
   );
 };
 

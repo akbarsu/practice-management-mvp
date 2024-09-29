@@ -1,59 +1,63 @@
 // Registration component for new users
 import React, { useState } from 'react';
+import { useAuth } from '../state/authContext';
 import { useHistory } from 'react-router-dom';
-import { registerUser } from '../services/authService';
+import {
+  Avatar,
+  Button,
+  TextField,
+  Typography,
+  Container,
+  CssBaseline,
+  makeStyles,
+} from '@material-ui/core';
+import PersonAddIcon from '@material-ui/icons/PersonAdd';
+
+const useStyles = makeStyles((theme) => ({
+  // ...styles here...
+}));
 
 const Register = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const classes = useStyles();
+  const { register } = useAuth();
   const history = useHistory();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+  });
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await registerUser({ firstName, lastName, email, password });
-      history.push('/login');
+      await register(formData);
+      history.push('/dashboard');
     } catch (error) {
-      console.error('Registration Error:', error);
-      // Handle error
+      console.error('Registration error:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Register</h2>
-      <input
-        type="text"
-        placeholder="First Name"
-        value={firstName}
-        onChange={(e) => setFirstName(e.target.value)}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Last Name"
-        value={lastName}
-        onChange={(e) => setLastName(e.target.value)}
-        required
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button type="submit">Register</button>
-    </form>
+    <Container component="main" maxWidth="xs">
+      {/* ...UI elements... */}
+      <form className={classes.form} onSubmit={handleSubmit}>
+        {/* ...TextFields for firstName, lastName, email, password... */}
+        <Button
+          // ...props...
+          type="submit"
+        >
+          Register
+        </Button>
+      </form>
+    </Container>
   );
 };
 

@@ -9,21 +9,16 @@ const PrivateRoute = ({ component: Component, roles, ...rest }) => {
       {...rest}
       render={(props) => {
         if (!authState.isAuthenticated) {
-          return (
-            <Redirect
-              to={{
-                pathname: '/login',
-                state: { from: props.location },
-              }}
-            />
-          );
+          // Not logged in, redirect to login page
+          return <Redirect to="/login" />;
         }
 
         if (roles && roles.indexOf(authState.user.role) === -1) {
           // Role not authorized
-          return <Redirect to={{ pathname: '/unauthorized' }} />;
+          return <Redirect to="/dashboard" />;
         }
 
+        // Authorized, render the component
         return <Component {...props} />;
       }}
     />

@@ -1,39 +1,27 @@
 // Displays outstanding and paid invoices
 import React, { useEffect, useContext } from 'react';
-import { getInvoices } from '../services/invoiceService';
 import { InvoiceContext } from '../state/invoiceContext';
-import { AuthContext } from '../state/authContext';
+import { useAuth } from '../state/authContext';
+import { getInvoices } from '../services/invoiceService';
 import {
-  List,
-  ListItem,
-  ListItemText,
-  Button,
   Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Button,
   makeStyles,
-  Paper,
-  Grid,
 } from '@material-ui/core';
-import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
-  container: {
-    maxWidth: 800,
-    margin: '0 auto',
-    padding: theme.spacing(3),
-  },
-  invoiceItem: {
-    marginBottom: theme.spacing(2),
-  },
-  payButton: {
-    marginLeft: theme.spacing(2),
-  },
+  // ...styles here...
 }));
 
 const InvoiceList = () => {
   const classes = useStyles();
   const { invoices, setInvoices } = useContext(InvoiceContext);
-  const { getToken } = useContext(AuthContext);
-  const history = useHistory();
+  const { getToken } = useAuth();
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -49,47 +37,46 @@ const InvoiceList = () => {
   }, [getToken, setInvoices]);
 
   const handlePay = (invoiceId) => {
-    history.push(`/invoices/${invoiceId}/pay`);
+    // Implement payment functionality or redirect to payment page
   };
 
   return (
-    <Paper className={classes.container}>
-      <Typography variant="h4" gutterBottom>
-        My Invoices
-      </Typography>
-      {invoices.length === 0 ? (
-        <Typography>No invoices found.</Typography>
+    <div>
+      {invoices.length > 0 ? (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Invoice Date</TableCell>
+              <TableCell>Amount Due</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {invoices.map((inv) => (
+              <TableRow key={inv._id}>
+                <TableCell>{new Date(inv.invoiceDate).toLocaleDateString()}</TableCell>
+                <TableCell>${inv.amountDue.toFixed(2)}</TableCell>
+                <TableCell>{inv.status}</TableCell>
+                <TableCell>
+                  {inv.status === 'unpaid' && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => handlePay(inv._id)}
+                    >
+                      Pay Now
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       ) : (
-        <List>
-          {invoices.map((invoice) => (
-            <Paper key={invoice._id} className={classes.invoiceItem}>
-              <ListItem>
-                <Grid container alignItems="center">
-                  <Grid item xs={8}>
-                    <ListItemText
-                      primary={`Invoice Date: ${new Date(invoice.invoiceDate).toLocaleDateString()}`}
-                      secondary={`Amount Due: $${invoice.amountDue.toFixed(2)} - Status: ${invoice.status}`}
-                    />
-                  </Grid>
-                  <Grid item xs={4} container justifyContent="flex-end">
-                    {invoice.status === 'unpaid' && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handlePay(invoice._id)}
-                        className={classes.payButton}
-                      >
-                        Pay Now
-                      </Button>
-                    )}
-                  </Grid>
-                </Grid>
-              </ListItem>
-            </Paper>
-          ))}
-        </List>
+        <Typography>No invoices found.</Typography>
       )}
-    </Paper>
+    </div>
   );
 };
 
