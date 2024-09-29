@@ -127,7 +127,7 @@ practice-management-mvp/
 - **`backend/`**: Contains all server-side logic, including routes, controllers, models, and services. It manages API endpoints, database interactions, and third-party integrations (OCR, payment processing, insurance verification).
 
   - **`controllers/`**: Handle HTTP requests and orchestrate operations for user management, appointments, invoices, and more.
-  - **`models/`**: Define MongoDB schemas for entities like users, appointments, invoices, and insurance.
+  - **`models/`**: Define data schemas and interact with the MongoDB database via Mongoose.
   - **`services/`**: Contain business logic and handle operations like payment processing and OCR.
   - **`routes/`**: Define RESTful API endpoints and map them to controller methods.
   - **`middleware/`**: Implement middleware for authentication, error handling, and request validation.
@@ -517,178 +517,356 @@ sequenceDiagram
 
 ## Integration with Insurance Databases: Automating Verification via APIs
 
-One of the standout features of our **Practice Management MVP** is the automated verification of insurance information by directly integrating with insurance providers' databases via APIs. This integration ensures the accuracy of insurance details, expedites the verification process, and minimizes administrative workload.
+### Overview
 
-#### Overview
+A critical differentiator of our **Practice Management MVP** is the automated verification of insurance information by directly integrating with insurance providers' databases through APIs. This integration ensures the accuracy of patients' insurance details, accelerates the verification process, reduces manual administrative workload, and minimizes the risk of claim denials due to incorrect or outdated information.
 
-By seamlessly cross-referencing the insurance data extracted from the OCR process with insurers' databases, we automate the validation of patients' insurance coverage. This reduces the risk of claim denials due to incorrect or outdated information and enhances the overall patient experience.
+### Technical Implementation
 
-#### Technical Implementation
+#### 1. Supported Insurance Providers and APIs
 
-**1. API Integration with Insurance Providers**
+We integrate with a variety of insurance providers that offer API access for eligibility verification. The providers currently supported include:
 
-- **Standardization and Compliance**: We leverage industry-standard protocols such as **FHIR (Fast Healthcare Interoperability Resources)** and **HL7** where available, ensuring interoperability and compliance with healthcare data standards.
-- **Authentication and Security**: Implemented using **OAuth 2.0** or **mutual TLS authentication** to securely communicate with insurance providers' APIs.
-- **Data Formats**: Communication is facilitated using **JSON** or **XML**, depending on the API specifications of each insurer.
+- **Blue Cross Blue Shield**: Using the **Availity API** platform.
+- **UnitedHealthcare**: Via their **Eligibility and Benefits API**.
+- **Aetna**: Through the **Navinet API**.
+- **Cigna**: Using the **Cigna HealthSpring API**.
 
-**2. Architecture**
+#### 2. Standards and Protocols
+
+To ensure interoperability and compliance with healthcare data exchange standards, we utilize:
+
+- **X12 EDI 270/271 Transactions**: For eligibility and benefits inquiry and response.
+- **FHIR (Fast Healthcare Interoperability Resources)**: Where available, for modern RESTful API interactions.
+- **OAuth 2.0**: As the primary authentication mechanism for secure API access.
+
+#### 3. System Architecture
 
 ```mermaid
 flowchart TD
-    OCRService -->|Extracted Data| VerificationModule
-    VerificationModule -->|Normalized Data| InsuranceAPIs
-    InsuranceAPIs -->|Verification Response| VerificationModule
-    VerificationModule -->|Update Status| Database[(MongoDB)]
-    Database -->|Status Update| BackendAPI
+    UserUploads[Extracted Insurance Data] -->|Standardized Format| VerificationService
+    VerificationService -->|Eligibility Request (270)| Clearinghouse
+    Clearinghouse -->|Eligibility Response (271)| VerificationService
+    VerificationService -->|Parsed and Mapped Data| BackendDatabase[(MongoDB)]
+    BackendDatabase -->|Updated Verification Status| BackendAPI
     BackendAPI -->|Notification| Frontend
     Frontend -->|Displays Verification Result| User
 ```
 
-**3. Workflow of the Verification Process**
+#### 4. Workflow and Data Flow
 
-- **Data Normalization**:
-  - Extracted insurance data is standardized to match the input requirements of various insurance APIs.
-  - Mapping functions handle differences in field names and data formats between different insurers.
+**Step 1: Data Standardization**
 
-- **Verification Request**:
-  - The system constructs a verification payload that includes:
-    - **Patient Identifiers**: Name, date of birth, social security number (if applicable).
-    - **Policy Details**: Policy number, group number, plan code.
-    - **Provider Information**: NPI number, practice details.
-
-- **Asynchronous Processing**:
-  - Verification requests are processed asynchronously using message queues (e.g., **RabbitMQ** or **Apache Kafka**).
-  - This allows the system to handle high volumes without impacting performance.
-
-- **Response Handling**:
-  - Responses from insurance APIs are parsed and interpreted.
-  - The insurance status is updated in the database:
-    - **Active Coverage**: Status set to `verified`.
-    - **Lapsed or Invalid Coverage**: Status set to `invalid`; triggers alerts.
-    - **Pending Review**: For inconclusive responses, status set to `pending_review`.
-
-**4. Error Handling and Resilience**
-
-- **Retry Logic**:
-  - Implement exponential backoff strategies for transient errors.
-  - After a predefined number of retries, the request is flagged for manual intervention.
-
-- **Circuit Breaker Pattern**:
-  - Prevents the system from repeatedly attempting to contact an unresponsive insurance API.
-  - Enhances system stability under failure conditions.
-
-- **Fallback Mechanisms**:
-  - If an insurer's API is unavailable, the system can:
-    - Schedule a retry at a later time.
-    - Notify administrative staff for manual verification.
-
-**5. Security and Compliance**
-
-- **HIPAA Compliance**:
-  - All data transmissions are encrypted using TLS 1.2 or higher.
-  - Access controls ensure that only authorized personnel can access sensitive information.
-
-- **Audit Trails**:
-  - Comprehensive logging of all verification requests and responses.
-  - Logs include timestamps, user identifiers, and actions taken.
-
-- **Data Minimization**:
-  - Only the minimum necessary patient data is transmitted to comply with the **Minimum Necessary Rule** under HIPAA.
-
-**6. Scalability Considerations**
-
-- **Microservices Architecture**:
-  - The verification module operates as an independent microservice, allowing it to scale horizontally based on load.
-  - Containerization using **Docker** and orchestration with **Kubernetes** enable dynamic scaling.
-
-- **Caching Mechanisms**:
-  - Recent verification results are cached (with respect to data validity periods) to reduce redundant API calls.
-  - Utilizes **Redis** or similar in-memory data stores.
-
-#### Challenges and Solutions
-
-- **Diverse API Specifications**:
-
-  - **Challenge**: Each insurance provider may have different API endpoints, authentication methods, and data requirements.
-  - **Solution**: Developed an **API Adapter Layer** that abstracts the underlying differences. This layer standardizes interactions, allowing the system to communicate uniformly with various insurers.
-
-- **Limited API Availability**:
-
-  - **Challenge**: Not all insurance companies offer public APIs for verification.
-  - **Solution**: Partnered with third-party intermediaries or clearinghouses that aggregate insurance data and provide unified API access.
-
-- **Data Privacy and Consent**:
-
-  - **Challenge**: Ensuring compliance with patient consent requirements for accessing insurance information.
-  - **Solution**: Incorporated consent management, where patients provide explicit permission during onboarding. Consent records are stored and referenced before initiating verification requests.
-
-- **Latency and Performance**:
-
-  - **Challenge**: Real-time verification may introduce latency due to external API response times.
-  - **Solution**: Implemented asynchronous processing and user notifications, so that verification can occur in the background without blocking user interactions.
-
-#### Future Enhancements
-
-- **Machine Learning Integration**:
-
-  - Utilize predictive analytics to assess the likelihood of successful verification based on historical data.
-  - Prioritize verification requests accordingly to optimize resource utilization.
-
-- **Blockchain for Data Integrity**:
-
-  - Explore the use of blockchain technology to securely record verification transactions and enhance data integrity.
-
-- **Expanded Network of Providers**:
-
-  - Continuously onboard more insurance providers and update the adapter layer to support new APIs as they become available.
-
-#### Advantages of Automated Verification
-
-- **Operational Efficiency**:
-
-  - **Reduction in Manual Workload**: Frees up administrative staff from time-consuming verification tasks.
-  - **Faster Processing**: Immediate verification enables quicker appointment confirmations and billing processes.
-
-- **Improved Revenue Cycle Management**:
-
-  - **Reduced Claim Denials**: Accurate insurance information leads to fewer claim rejections.
-  - **Timely Payments**: Expedites the billing cycle by ensuring upfront that services are covered.
-
-- **Enhanced Patient Satisfaction**:
-
-  - **Transparency**: Patients are promptly informed about their coverage status.
-  - **Convenience**: Eliminates the need for patients to provide additional documentation or clarification.
-
-#### Example Code Snippet
+- **Purpose**: Convert extracted insurance data into a standardized format required for EDI transactions.
+- **Process**:
+  - Map fields from OCR output to required fields for the 270 eligibility request.
+  - Required fields include:
+    - **Subscriber ID**
+    - **Subscriber Name**
+    - **Patient Relationship to Subscriber**
+    - **Provider NPI (National Provider Identifier)**
+    - **Date of Service**
 
 ```javascript
-// Pseudocode for Verification Request
-
-async function verifyInsurance(insuranceData) {
-  const adapter = getInsuranceAdapter(insuranceData.providerName);
-
-  try {
-    const response = await adapter.verifyCoverage(insuranceData);
-
-    if (response.status === 'active') {
-      updateInsuranceStatus(insuranceData.userId, 'verified');
-    } else if (response.status === 'inactive') {
-      updateInsuranceStatus(insuranceData.userId, 'invalid');
-      notifyUser(insuranceData.userId, 'Insurance coverage is inactive.');
-    } else {
-      updateInsuranceStatus(insuranceData.userId, 'pending_review');
-      alertAdmin('Verification pending for user ' + insuranceData.userId);
-    }
-  } catch (error) {
-    handleVerificationError(error, insuranceData);
-  }
+// Example mapping function
+function mapToEDI270(insuranceData, patientData, providerData) {
+  return {
+    transactionSetIdentifierCode: '270',
+    subscriber: {
+      id: insuranceData.policyNumber,
+      name: {
+        firstName: patientData.firstName,
+        lastName: patientData.lastName,
+      },
+      relationshipToInsuredCode: '18', // 'Self' if patient is the subscriber
+    },
+    provider: {
+      npi: providerData.npi,
+      name: providerData.name,
+    },
+    serviceTypeCodes: ['30'], // Code for 'Health Benefit Plan Coverage'
+    eligibilityDates: {
+      dateTimeQualifier: '291', // 'On'
+      dateTimePeriod: new Date().toISOString().split('T')[0], // Current date
+    },
+  };
 }
 ```
 
-#### Conclusion
+**Step 2: Constructing Eligibility Request (EDI 270)**
 
-The integration with insurance databases significantly enhances the efficiency and reliability of insurance verification within our system. By automating this process, we minimize errors, reduce administrative burdens, and improve both operational efficiency and patient satisfaction.
+- **Purpose**: Create an EDI 270 transaction that adheres to the X12 standard.
+- **Process**:
+  - Use a library like **node-edi** or custom code to serialize the data into an EDI format.
+  - Handle segment delimiters, element separators, and required segments as per the 270 specification.
+
+```javascript
+// Pseudocode for EDI 270 serialization
+const edi270String = serializeEDI270(mappedData);
+
+// Function to send EDI 270 request
+async function sendEligibilityRequest(ediString) {
+  const response = await axios.post(clearinghouseEndpoint, ediString, {
+    headers: {
+      'Content-Type': 'application/EDI-X12',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  return response.data;
+}
+```
+
+**Step 3: Sending Request to Clearinghouse**
+
+- **Purpose**: Use a healthcare clearinghouse to facilitate EDI transactions with multiple insurance providers.
+- **Clearinghouses Used**: **Office Ally**, **Availity**, or **Change Healthcare**.
+- **Process**:
+  - Authenticate with the clearinghouse using secure methods (e.g., API keys, OAuth 2.0).
+  - Transmit the EDI 270 request over a secure connection (HTTPS with TLS 1.2 or higher).
+
+**Step 4: Handling Eligibility Response (EDI 271)**
+
+- **Purpose**: Receive and parse the EDI 271 response containing eligibility and benefits information.
+- **Process**:
+  - Receive the EDI 271 response.
+  - Parse the response using an EDI parsing library.
+
+```javascript
+// Pseudocode for EDI 271 parsing
+const edi271Response = await sendEligibilityRequest(edi270String);
+const parsedResponse = parseEDI271(edi271Response);
+
+// Example parsing function
+function parseEDI271(ediString) {
+  // Parse the EDI string into a structured JSON
+  const parsedData = ediParser.parse(ediString);
+  return parsedData;
+}
+```
+
+**Step 5: Interpreting the Response**
+
+- **Eligibility Verification**:
+  - Check the **Eligibility or Benefit Information** (EB) segments in the 271 response.
+  - Determine if the coverage is active based on the **Eligibility Information Code**.
+
+- **Common Eligibility Information Codes**:
+  - **1**: Active Coverage
+  - **6**: Inactive
+  - **3**: Active – Full Risk Capitation
+  - **G2**: Out of Network
+
+```javascript
+// Interpreting eligibility status
+const eligibilityStatus = getEligibilityStatus(parsedResponse);
+
+function getEligibilityStatus(responseData) {
+  const ebSegments = responseData.segments.filter(
+    (segment) => segment.tag === 'EB'
+  );
+  const activeCoverage = ebSegments.find((eb) => eb.elements[1] === '1');
+  return activeCoverage ? 'active' : 'inactive';
+}
+```
+
+**Step 6: Updating the Database**
+
+- **Process**:
+  - Update the user's insurance record in MongoDB with the verification result.
+  - Record details such as:
+    - Verification date and time
+    - Eligibility status
+    - Coverage details (e.g., co-pay, deductible, plan limitations)
+
+```javascript
+// Updating insurance status in the database
+await InsuranceModel.updateOne(
+  { userId: insuranceData.userId },
+  {
+    verificationStatus: eligibilityStatus,
+    verificationDetails: parsedResponse,
+    lastVerified: new Date(),
+  }
+);
+```
+
+**Step 7: Notifying the User**
+
+- **Process**:
+  - Send a notification to the user via the frontend application.
+  - Update the UI to reflect the new insurance verification status.
+
+```javascript
+// Sending notification to the frontend via WebSocket or API response
+io.to(userSocketId).emit('insuranceVerificationUpdate', {
+  status: eligibilityStatus,
+  details: parsedResponse,
+});
+```
+
+#### 5. Error Handling and Resilience
+
+- **EDI Compliance Errors**:
+  - Implement validation of EDI messages before sending.
+  - Use acknowledgment transactions (TA1, 997) to detect and handle errors.
+
+- **Retry Mechanism**:
+  - Implement retries with exponential backoff for transient network errors.
+  - Log all failed transactions for audit purposes.
+
+- **Fallback Procedures**:
+  - If electronic verification fails, flag the record for manual verification.
+  - Notify administrative staff to follow up.
+
+#### 6. Security and Compliance
+
+- **Data Encryption**:
+  - All data in transit is encrypted using TLS 1.2+.
+  - Sensitive data at rest is encrypted using AES-256 encryption.
+
+- **Authentication**:
+  - Use OAuth 2.0 with client credentials grant for service-to-service authentication.
+  - Rotate API keys and access tokens regularly.
+
+- **HIPAA Compliance**:
+  - Implement strict access controls and audit logging.
+  - Ensure Business Associate Agreements (BAAs) are in place with all third-party services.
+
+#### 7. Detailed Code Implementation
+
+**Eligibility Verification Service (`eligibilityService.js`)**
+
+```javascript
+const axios = require('axios');
+const ediParser = require('x12-parser');
+const { InsuranceModel } = require('../models/insuranceModel');
+const { getClearinghouseToken } = require('../utils/authHelpers');
+
+async function verifyInsuranceEligibility(userId, insuranceData, patientData) {
+  // Step 1: Map data to EDI 270 format
+  const edi270Data = mapToEDI270(insuranceData, patientData, {
+    npi: process.env.PROVIDER_NPI,
+    name: process.env.PROVIDER_NAME,
+  });
+
+  // Serialize EDI 270 data
+  const edi270String = serializeEDI270(edi270Data);
+
+  // Get authentication token for clearinghouse
+  const accessToken = await getClearinghouseToken();
+
+  // Step 2: Send eligibility request
+  const edi271Response = await sendEligibilityRequest(
+    edi270String,
+    accessToken
+  );
+
+  // Step 3: Parse EDI 271 response
+  const parsedResponse = parseEDI271(edi271Response);
+
+  // Step 4: Interpret the response
+  const eligibilityStatus = getEligibilityStatus(parsedResponse);
+
+  // Step 5: Update the database
+  await InsuranceModel.updateOne(
+    { userId: userId },
+    {
+      verificationStatus: eligibilityStatus,
+      verificationDetails: parsedResponse,
+      lastVerified: new Date(),
+    }
+  );
+
+  // Return the eligibility status
+  return eligibilityStatus;
+}
+
+module.exports = {
+  verifyInsuranceEligibility,
+};
+```
+
+**Utility Functions (`utils/ediHelpers.js`)**
+
+```javascript
+const ediParser = require('x12-parser');
+
+function serializeEDI270(data) {
+  // Implement serialization logic according to EDI 270 specifications
+  // ...
+  return ediString;
+}
+
+function parseEDI271(ediString) {
+  // Use an EDI parser to convert the EDI 271 string into a JSON object
+  const parser = new ediParser.X12Parser();
+  const interchange = parser.parse(ediString);
+  return interchange;
+}
+
+function getEligibilityStatus(parsedResponse) {
+  // Extract eligibility status from parsed EDI 271 response
+  // ...
+  return status; // 'active' or 'inactive'
+}
+
+module.exports = {
+  serializeEDI270,
+  parseEDI271,
+  getEligibilityStatus,
+};
+```
+
+#### 8. Challenges and Solutions
+
+- **Complexity of EDI Transactions**:
+  - **Challenge**: EDI 270/271 transactions are complex and require adherence to strict formatting rules.
+  - **Solution**: Utilize specialized libraries and invest in thorough testing with sample EDI files. Collaborate with EDI specialists if necessary.
+
+- **Clearinghouse Integration**:
+  - **Challenge**: Each clearinghouse may have different APIs and requirements.
+  - **Solution**: Abstract clearinghouse interactions behind a common interface, allowing us to switch clearinghouses with minimal code changes.
+
+- **Data Privacy Concerns**:
+  - **Challenge**: Handling sensitive patient data requires strict compliance.
+  - **Solution**: Ensure all team members are trained on HIPAA requirements. Regularly audit code and data flows for compliance.
+
+- **Handling Coverage Details Variability**:
+  - **Challenge**: Coverage details can vary widely between insurance plans.
+  - **Solution**: Build a flexible data model for storing coverage details. Provide administrative interfaces to view and interpret coverage information.
+
+#### 9. Future Enhancements
+
+- **Real-Time Eligibility Checks**:
+  - Implement eligibility checks during appointment scheduling to inform patients of their coverage status upfront.
+
+- **Machine-Readable Health Plan Documents**:
+  - Integrate with APIs that provide machine-readable plan documents as per the CMS Interoperability and Patient Access final rule.
+
+- **Artificial Intelligence for Data Interpretation**:
+  - Use AI to interpret complex coverage data and provide simplified summaries to patients and providers.
+
+- **Blockchain for Secure Data Exchange**:
+  - Investigate blockchain technology to enhance security and trust in data exchange processes.
+
+#### 10. Advantages of Automated Verification
+
+- **Operational Efficiency**:
+  - Reduces administrative workload, allowing staff to focus on patient care.
+  - Speeds up the verification process from days to minutes.
+
+- **Improved Cash Flow**:
+  - Minimizes claim denials due to inaccurate insurance information.
+  - Ensures services provided are covered, reducing unpaid bills.
+
+- **Enhanced Patient Experience**:
+  - Provides transparency about coverage and costs.
+  - Builds trust with patients through efficient handling of their information.
+
+### Conclusion
+
+By integrating directly with insurance databases via APIs using standardized EDI transactions, our system offers a robust, secure, and efficient solution for insurance eligibility verification. This automation not only streamlines administrative processes but also significantly enhances patient satisfaction and the financial health of the practice.
 
 ---
 
-*This README provides a detailed technical overview of the Practice Management MVP, outlining its architecture, components, and workflows to facilitate understanding and collaboration among developers and stakeholders.*
+*This detailed explanation should provide a comprehensive understanding of the technical specifics of how we are integrating with insurance databases via APIs in our Practice Management MVP.*
