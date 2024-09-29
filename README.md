@@ -168,14 +168,14 @@ The backend is built with Node.js and Express.js, following a modular structure.
 
 ```mermaid
 flowchart TB
-    subgraph Backend[Backend (Node.js/Express.js)]
+    subgraph Backend[Backend Node.js/Express.js]
         Controllers --> Models
         Controllers --> Services
         Controllers -->|Use| Middleware
         Routes --> Controllers
         Middleware --> Config
     end
-    Backend --> |Database Connection| MongoDB[(MongoDB)]
+    Backend --> |Database Connection| MongoD(MongoDB)]
     Backend --> |Integrations| ThirdPartyAPIs[Third-Party Services]
 ```
 
