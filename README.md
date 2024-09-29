@@ -192,7 +192,7 @@ The frontend is developed using React.js, utilizing functional components and ho
 
 ```mermaid
 flowchart TB
-    subgraph Frontend[Frontend (React.js)]
+    subgraph Frontend[Frontend React.js]
         Components --> Pages
         Pages --> AppComponent[App.js]
         AppComponent --> Routing
