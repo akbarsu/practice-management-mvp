@@ -673,8 +673,8 @@ To ensure interoperability and compliance with healthcare data exchange standard
 ```mermaid
 flowchart TD
     UserUploads[Extracted Insurance Data] -->|Standardized Format| VerificationService
-    VerificationService -->|Eligibility Request (270)| Clearinghouse
-    Clearinghouse -->|Eligibility Response (271)| VerificationService
+    VerificationService -->|Eligibility Request 270| Clearinghouse
+    Clearinghouse -->|Eligibility Response 271| VerificationService
     VerificationService -->|Parsed and Mapped Data| BackendDatabase[(MongoDB)]
     BackendDatabase -->|Updated Verification Status| BackendAPI
     BackendAPI -->|Notification| Frontend
@@ -997,27 +997,4 @@ By integrating directly with insurance databases via APIs using standardized EDI
 
 ---
 
-## Security Considerations
-
-- **Data Encryption**: All data transmitted between the client and server is encrypted using SSL/TLS.
-- **Password Security**: Passwords are hashed using bcrypt before storage.
-- **Input Validation**: All incoming data is validated and sanitized to prevent SQL injection and XSS attacks.
-- **Access Control**: Middleware enforces authentication and authorization based on user roles.
-- **Compliance**: The application is designed with HIPAA compliance in mind to protect patient health information.
-
----
-
-## Future Enhancements
-
-- **Mobile Applications**: Develop native iOS and Android apps for better accessibility.
-- **Microservices Architecture**: Refactor the backend into microservices for scalability.
-- **Telehealth Features**: Integrate video conferencing for remote consultations.
-- **AI Recommendations**: Use machine learning to provide insights and predictive analytics.
-- **Multilingual Support**: Offer the application in multiple languages for broader reach.
-- **Integration with EHR Systems**: Sync data with Electronic Health Records for comprehensive patient care.
-
----
-
-## Conclusion
-
-*This README provides a detailed technical overview of the Practice Management MVP, outlining its architecture, components, and workflows to facilitate understanding and collaboration among developers and stakeholders.*
+*This detailed explanation should provide a comprehensive understanding of the technical specifics of how we are integrating with insurance databases via APIs in our Practice Management MVP.*
