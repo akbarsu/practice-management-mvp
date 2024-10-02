@@ -1,5 +1,11 @@
 # Practice Management MVP
 
+<!-- Insert SVG Logo -->
+<p align="center">
+  <img src="logo.svg" alt="PracticeMVP Logo" width="200" height="200">
+</p>
+
+<!-- Badges -->
 <p align="center">
   <a href="https://github.com/your-repo/practice-management-mvp/actions">
     <img src="https://img.shields.io/github/actions/workflow/status/your-repo/practice-management-mvp/ci.yml?branch=main&style=for-the-badge" alt="Build Status">
@@ -23,34 +29,8 @@
 
 ---
 
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Project Structure](#project-structure)
-3. [System Architecture](#system-architecture)
-   - [High-Level Overview](#high-level-overview)
-   - [Backend Architecture](#backend-architecture)
-   - [Frontend Architecture](#frontend-architecture)
-4. [Technology Stack](#technology-stack)
-   - [Frontend Technologies](#frontend-technologies)
-   - [Backend Technologies](#backend-technologies)
-   - [Third-Party Integrations](#third-party-integrations)
-5. [Database Design](#database-design)
-   - [Data Models](#data-models)
-   - [Entity-Relationship Diagram](#entity-relationship-diagram)
-6. [API Endpoints](#api-endpoints)
-7. [Module Breakdown](#module-breakdown)
-   - [Authentication and Authorization](#authentication-and-authorization)
-   - [User Profile Management](#user-profile-management)
-   - [Appointment Management](#appointment-management)
-   - [Invoice and Payment Processing](#invoice-and-payment-processing)
-   - [Admin Panel](#admin-panel)
-8. [System Workflows](#system-workflows)
-9. [Optical Character Recognition (OCR) Automation](#optical-character-recognition-ocr-automation)
-10. [Integration with Insurance Databases](#integration-with-insurance-databases)
-11. [Security Considerations](#security-considerations)
-12. [Future Enhancements](#future-enhancements)
-13. [Conclusion](#conclusion)
+<!-- Introduction Paragraph -->
+**Practice Management MVP** is a comprehensive, web-based application meticulously crafted to streamline administrative tasks for healthcare practices, with a specialized focus on dental clinics. Our solution enhances operational efficiency by automating key processes such as appointment scheduling, invoice management, and insurance verification. Leveraging advanced Optical Character Recognition (OCR) technology and seamless integration with insurance databases, we eliminate manual data entry and reduce errors. This empowers healthcare providers to devote more time to delivering exceptional patient care while optimizing administrative workflows and financial performance.
 
 ---
 
